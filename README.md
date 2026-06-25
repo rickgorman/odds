@@ -17,3 +17,5 @@ npm run dev
 npm test
 npm run build
 ```
+
+These same checks run automatically on every pull request via GitHub Actions.
