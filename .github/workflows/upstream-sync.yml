@@ -2,7 +2,8 @@ name: Upstream sync
 
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 15-23 * * *'
+    - cron: '0 0-6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -12,7 +13,17 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Gate to 8am-10pm Pacific
+        id: gate
+        if: github.event_name == 'schedule'
+        run: |
+          hour=$(TZ=America/Los_Angeles date +%H)
+          if [ "$hour" -lt 8 ] || [ "$hour" -gt 22 ]; then
+            echo "Pacific hour $hour outside 08-22 window; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Fast-forward main from wshaver/odds
+        if: steps.gate.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh repo sync rickgorman/odds --source wshaver/odds --branch main
